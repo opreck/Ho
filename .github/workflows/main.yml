@@ -1,8 +1,8 @@
 name: Ice
 
 on:
-  workflow_dispatch:
-
+  repository_dispatch:
+   types : [wisp]
 jobs:
   run-ollama:
     runs-on: ubuntu-latest
