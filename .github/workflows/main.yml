@@ -1,17 +1,41 @@
-name: Wispbyte
+name: Ice
 
 on:
-  repository_dispatch:
-    types: [wisp]
-
+  workflow_dispatch:
+   types: [wisp]
+   
 jobs:
-  run-job:
+  run-ollama:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Run Script or Commands
+      - name: Install
         run: |
-          echo "Workflow berhasil berjalan dari trigger Wispbyte!"
+          curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ollama
+          key: ollama-qwen2.5-0.5b
+
+      - name: Run
+        run: |
+          ollama serve &
+          sleep 3
+          ollama pull qwen2.5:0.5b
+
+      - name: Tunneling
+        run: |
+          npx localtunnel --port 11434 > tunnel.log 2>&1 &
+          sleep 5
+          TUNNEL_URL=$(grep -o 'https://[^ ]*' tunnel.log | head -n 1)
+          
+          curl -X POST http://node54.lunes.host:3015/register \
+            -H "Content-Type: application/json" \
+            -H "Bypass-Tunnel-Remainder: true" \
+            -d "{\"url\": \"$TUNNEL_URL\"}"
+
+      - name: Keep
+        run: |
+          sleep 6h
           
