@@ -1,0 +1,17 @@
+name: Wispbyte
+
+on:
+  repository_dispatch:
+    types: [wisp]
+
+jobs:
+  run-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Script or Commands
+        run: |
+          echo "Workflow berhasil berjalan dari trigger Wispbyte!"
+          
