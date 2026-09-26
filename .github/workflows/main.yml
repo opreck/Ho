@@ -1,8 +1,8 @@
 name: Ice
 
 on:
-  workflow_dispatch:
-
+  repository_dispatch:
+   types : [wisp]
 jobs:
   run-ollama:
     runs-on: ubuntu-latest
@@ -27,18 +27,12 @@ jobs:
 
       - name: Tun
         run: |
-          ssh -T -o StrictHostKeyChecking=no -p 443 -R 0:localhost:11434 a.pinggy.io > tunnel.log 2>&1 &
-          sleep 8
+          npx localtunnel --port 11434 > lt.log 2>&1 &
+          sleep 6
 
-          TUNNEL_URL=$(sed 's/\x1b\[[0-9;]*m//g' tunnel.log | grep -o 'https://[a-zA-Z0-9.-]*\.pinggy\.[a-z]*' | head -n 1)
+          TUNNEL_URL=$(grep -o 'https://[^ ]*\.loca\.lt' lt.log | head -n 1)
 
-          if [ -z "$TUNNEL_URL" ]; then
-            npx localtunnel --port 11434 > lt.log 2>&1 &
-            sleep 5
-            TUNNEL_URL=$(grep -o 'https://[^ ]*' lt.log | head -n 1)
-          fi
-
-          echo "URL Hasil: $TUNNEL_URL"
+          echo "URL Tunnel: $TUNNEL_URL"
 
           curl -X POST http://node54.lunes.host:3015/register \
             -H "Content-Type: application/json" \
