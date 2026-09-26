@@ -1,9 +1,8 @@
 name: Ice
 
 on:
-  repository_dispatch:
-   types: [wisp]
-   
+  workflow_dispatch:
+
 jobs:
   run-ollama:
     runs-on: ubuntu-latest
@@ -24,15 +23,14 @@ jobs:
           sleep 3
           ollama pull qwen2.5:0.5b
 
-      - name: Tunneling
+      - name: Tun
         run: |
-          npx localtunnel --port 11434 > tunnel.log 2>&1 &
+          ssh -o StrictHostKeyChecking=no -R 80:localhost:11434 a.pinggy.io > tunnel.log 2>&1 &
           sleep 5
           TUNNEL_URL=$(grep -o 'https://[^ ]*' tunnel.log | head -n 1)
           
           curl -X POST http://node54.lunes.host:3015/register \
             -H "Content-Type: application/json" \
-            -H "Bypass-Tunnel-Remainder: true" \
             -d "{\"url\": \"$TUNNEL_URL\"}"
 
       - name: Keep
