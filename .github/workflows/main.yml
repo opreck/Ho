@@ -29,21 +29,23 @@ jobs:
         run: |
           pkill ollama || true
           sleep 2
-          OLLAMA_HOST=0.0.0.0:11434 OLLAMA_ORIGINS="*" nohup ollama serve > ollama.log 2>&1 &
+          export OLLAMA_HOST="0.0.0.0:11434"
+          export OLLAMA_ORIGINS="*"
+          nohup ollama serve > ollama.log 2>&1 &
           sleep 5
           ollama pull phi3:mini
 
       - name: Start
         run: |
-          nohup ./cloudflared tunnel --url http://127.0.0.1:11434 > cf.log 2>&1 &
+          nohup ./cloudflared tunnel --url http://127.0.0.1:11434 --http-host-header "localhost:11434" > cf.log 2>&1 &
           
           TUNNEL_URL=""
-          for i in {1..15}; do
-            TUNNEL_URL=$(grep -o 'https://[a-zA-Z0-9-]*\.trycloudflare\.com' cf.log | head -n 1)
+          for i in {1..20}; do
+            sleep 2
+            TUNNEL_URL=$(grep -o 'https://[a-zA-Z0-9-]*\.trycloudflare\.com' cf.log | tail -n 1)
             if [ -n "$TUNNEL_URL" ]; then
               break
             fi
-            sleep 2
           done
 
           echo "URL Cloudflare Terdeteksi: $TUNNEL_URL"
@@ -58,7 +60,7 @@ jobs:
             exit 1
           fi
 
-      - name: Keep Alive
+      - name: Keep
         run: |
           sleep 20000
           
