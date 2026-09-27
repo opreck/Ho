@@ -1,4 +1,4 @@
-name: Runer
+name: Runner
 
 on:
   repository_dispatch:
@@ -36,6 +36,7 @@ jobs:
           ollama pull qwen2.5:7b
           ollama pull gemma2:2b
           ollama pull qwen2.5:1.5b
+          ollama pull qwen2.5:0.5b
 
       - name: Start
         run: |
