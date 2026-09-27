@@ -2,7 +2,7 @@ name: Run
 
 on:
   workflow_dispatch:
-
+   types : [wisp]
 jobs:
   run-ollama:
     runs-on: ubuntu-latest
@@ -11,7 +11,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ollama
-          key: ollama-qwen2.5-0.5b-${{ runner.os }}
+          key: ollama-phi3-mini-${{ runner.os }}
 
       - name: Install
         run: |
@@ -28,7 +28,7 @@ jobs:
           sleep 2
           OLLAMA_HOST=0.0.0.0:11434 OLLAMA_ORIGINS="*" nohup ollama serve > ollama.log 2>&1 &
           sleep 5
-          ollama pull qwen2.5:0.5b
+          ollama pull phi3:mini
 
       - name: Tun
         run: |
@@ -59,3 +59,4 @@ jobs:
       - name: Keep
         run: |
           sleep 21600
+          
