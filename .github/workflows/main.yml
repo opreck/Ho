@@ -1,4 +1,4 @@
-name: Run
+name: Runner
 
 on:
   repository_dispatch:
@@ -8,13 +8,13 @@ jobs:
   run-ollama:
     runs-on: ubuntu-latest
     steps:
-      - name: Cache Ollama Models
+      - name: Cache
         uses: actions/cache@v4
         with:
           path: ~/.ollama
-          key: ollama-phi3-mini-${{ runner.os }}-${{ hashFiles('**/ollama') }}
+          key: ollama-qwen-${{ runner.os }}-${{ hashFiles('**/ollama') }}
           restore-keys: |
-            ollama-phi3-mini-${{ runner.os }}-
+            ollama-qwen-${{ runner.os }}-
 
       - name: Install
         run: |
@@ -33,7 +33,7 @@ jobs:
           export OLLAMA_ORIGINS="*"
           nohup ollama serve > ollama.log 2>&1 &
           sleep 5
-          ollama pull phi3:mini
+          ollama pull qwen2.5:7b
 
       - name: Start
         run: |
