@@ -1,44 +1,61 @@
-name: Ice
+name: Run
 
 on:
-  repository_dispatch:
-   types : [wisp]
+  workflow_dispatch:
+
 jobs:
   run-ollama:
     runs-on: ubuntu-latest
     steps:
-      - name: Install
-        run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-
       - name: Cache
         uses: actions/cache@v4
         with:
           path: ~/.ollama
-          key: ollama-qwen2.5-0.5b
+          key: ollama-qwen2.5-0.5b-${{ runner.os }}
+
+      - name: Install
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+
+      - name: Install
+        run: |
+          curl -L --output cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x cloudflared
 
       - name: Run
         run: |
           pkill ollama || true
           sleep 2
-          ollama serve &
+          OLLAMA_HOST=0.0.0.0:11434 OLLAMA_ORIGINS="*" nohup ollama serve > ollama.log 2>&1 &
           sleep 5
           ollama pull qwen2.5:0.5b
 
       - name: Tun
         run: |
-          npx localtunnel --port 11434 > lt.log 2>&1 &
-          sleep 6
+          nohup ./cloudflared tunnel --url http://127.0.0.1:11434 > cf.log 2>&1 &
+          
+          # wait URL Cloudflare in log (max 30d)
+          TUNNEL_URL=""
+          for i in {1..15}; do
+            TUNNEL_URL=$(grep -o 'https://[a-zA-Z0-9-]*\.trycloudflare\.com' cf.log | head -n 1)
+            if [ -n "$TUNNEL_URL" ]; then
+              break
+            fi
+            sleep 2
+          done
 
-          TUNNEL_URL=$(grep -o 'https://[^ ]*\.loca\.lt' lt.log | head -n 1)
+          echo "URL Cloudflare Terdeteksi: $TUNNEL_URL"
 
-          echo "URL Tunnel: $TUNNEL_URL"
-
-          curl -X POST http://node54.lunes.host:3015/register \
-            -H "Content-Type: application/json" \
-            -d "{\"url\": \"$TUNNEL_URL\"}"
+          if [ -n "$TUNNEL_URL" ]; then
+            curl -X POST http://node54.lunes.host:3015/register \
+              -H "Content-Type: application/json" \
+              -d "{\"url\": \"$TUNNEL_URL\"}"
+          else
+            echo "Gagal mendapatkan URL Cloudflare"
+            cat cf.log
+            exit 1
+          fi
 
       - name: Keep
         run: |
-          sleep 6h
-          
+          sleep 21600
