@@ -1,7 +1,7 @@
 name: Run
 
 on:
-  workflow_dispatch:
+  repository_dispatch:
    types : [wisp]
 jobs:
   run-ollama:
