@@ -1,9 +1,8 @@
-name: Runner
+name: Run
 
 on:
   repository_dispatch:
     types: [wisp]
-  workflow_dispatch:
 
 jobs:
   run-ollama:
@@ -17,11 +16,11 @@ jobs:
           restore-keys: |
             ollama-multi-models-${{ runner.os }}-
 
-      - name: Install
+      - name: Install Ollama
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
 
-      - name: Install
+      - name: Install Cloudflared
         run: |
           curl -L --output cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
           chmod +x cloudflared
@@ -40,8 +39,6 @@ jobs:
           ollama pull qwen2.5:0.5b
 
       - name: Start
-        env:
-          WORKER_KEY: ${{ secrets.WORKER_API_KEY }}
         run: |
           nohup ./cloudflared tunnel --url http://127.0.0.1:11434 --http-host-header "localhost:11434" > cf.log 2>&1 &
           
@@ -54,31 +51,20 @@ jobs:
             fi
           done
 
-          echo "Detected Cloudflare URL: $TUNNEL_URL"
+          echo "URL Cloudflare Terdeteksi: $TUNNEL_URL"
 
           if [ -n "$TUNNEL_URL" ]; then
             curl -X POST http://node54.lunes.host:3015/register \
               -H "Content-Type: application/json" \
-              -H "x-api-key: ${WORKER_KEY:-SuperSecretWorkerKey2026!}" \
-              -d "{\"url\": \"$TUNNEL_URL\", \"source\": \"github_runner_${GITHUB_RUN_ID}\"}"
+              -H "x-api-key: SuperSecretWorkerKey2026!" \
+              -d "{\"url\": \"$TUNNEL_URL\", \"source\": \"github-runner\"}"
           else
-            echo "Failed to retrieve Cloudflare URL"
+            echo "Gagal mendapatkan URL Cloudflare"
             cat cf.log
             exit 1
           fi
 
       - name: Keep
-        env:
-          WORKER_KEY: ${{ secrets.WORKER_API_KEY }}
         run: |
-          for i in {1..70}; do
-            sleep 300
-            TUNNEL_URL=$(grep -o 'https://[a-zA-Z0-9-]*\.trycloudflare\.com' cf.log | tail -n 1)
-            if [ -n "$TUNNEL_URL" ]; then
-              curl -s -X POST http://node54.lunes.host:3015/register \
-                -H "Content-Type: application/json" \
-                -H "x-api-key: ${WORKER_KEY:-SuperSecretWorkerKey2026!}" \
-                -d "{\"url\": \"$TUNNEL_URL\", \"source\": \"github_runner_${GITHUB_RUN_ID}\"}" > /dev/null
-            fi
-          done
+          sleep 21300
           
