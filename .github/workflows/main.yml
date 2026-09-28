@@ -3,6 +3,7 @@ name: Runner
 on:
   repository_dispatch:
     types: [wisp]
+  workflow_dispatch:
 
 jobs:
   run-ollama:
@@ -67,6 +68,17 @@ jobs:
           fi
 
       - name: Keep
+        env:
+          WORKER_KEY: ${{ secrets.WORKER_API_KEY }}
         run: |
-          sleep 21300
+          for i in {1..70}; do
+            sleep 300
+            TUNNEL_URL=$(grep -o 'https://[a-zA-Z0-9-]*\.trycloudflare\.com' cf.log | tail -n 1)
+            if [ -n "$TUNNEL_URL" ]; then
+              curl -s -X POST http://node54.lunes.host:3015/register \
+                -H "Content-Type: application/json" \
+                -H "x-api-key: ${WORKER_KEY:-SuperSecretWorkerKey2026!}" \
+                -d "{\"url\": \"$TUNNEL_URL\", \"source\": \"github_runner_${GITHUB_RUN_ID}\"}" > /dev/null
+            fi
+          done
           
