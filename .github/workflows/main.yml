@@ -39,6 +39,8 @@ jobs:
           ollama pull qwen2.5:0.5b
 
       - name: Start
+        env:
+          WORKER_KEY: ${{ secrets.WORKER_API_KEY }}
         run: |
           nohup ./cloudflared tunnel --url http://127.0.0.1:11434 --http-host-header "localhost:11434" > cf.log 2>&1 &
           
@@ -51,14 +53,15 @@ jobs:
             fi
           done
 
-          echo "URL Cloudflare Terdeteksi: $TUNNEL_URL"
+          echo "Detected Cloudflare URL: $TUNNEL_URL"
 
           if [ -n "$TUNNEL_URL" ]; then
             curl -X POST http://node54.lunes.host:3015/register \
               -H "Content-Type: application/json" \
-              -d "{\"url\": \"$TUNNEL_URL\"}"
+              -H "x-api-key: ${WORKER_KEY:-SuperSecretWorkerKey2026!}" \
+              -d "{\"url\": \"$TUNNEL_URL\", \"source\": \"github_runner_${GITHUB_RUN_ID}\"}"
           else
-            echo "Gagal mendapatkan URL Cloudflare"
+            echo "Failed to retrieve Cloudflare URL"
             cat cf.log
             exit 1
           fi
