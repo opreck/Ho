@@ -56,9 +56,9 @@ jobs:
           SERVER_ID="github_runner_${{ github.run_id }}"
 
           if [ -n "$TUNNEL_URL" ]; then
-            curl -X POST http://node54.lunes.host:3015/register \
+            curl -X POST "${{ secrets.LUNES_HOST_URL }}/register" \
               -H "Content-Type: application/json" \
-              -H "x-api-key: SuperSecretWorkerKey2026!" \
+              -H "x-api-key: ${{ secrets.WORKER_API_KEY }}" \
               -d "{\"url\": \"$TUNNEL_URL\", \"provider\": \"github_runner\", \"serverId\": \"$SERVER_ID\"}"
           else
             echo "Gagal mendapatkan URL Cloudflare"
@@ -69,13 +69,4 @@ jobs:
       - name: Keep
         run: |
           sleep 21300
-
-      - name: Unregister on exit
-        if: always()
-        run: |
-          SERVER_ID="github_runner_${{ github.run_id }}"
-          curl -X POST http://node54.lunes.host:3015/unregister \
-            -H "Content-Type: application/json" \
-            -H "x-api-key: SuperSecretWorkerKey2026!" \
-            -d "{\"serverId\": \"$SERVER_ID\"}"
-            
+          
