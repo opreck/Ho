@@ -69,4 +69,13 @@ jobs:
       - name: Keep
         run: |
           sleep 21300
-          
+
+      - name: Unregister Server
+        if: always()
+        run: |
+          SERVER_ID="github_runner_${{ github.run_id }}"
+          echo "Menghapus server $SERVER_ID dari backend..."
+          curl -X POST "${{ secrets.LUNES_HOST_URL }}/unregister" \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: ${{ secrets.WORKER_API_KEY }}" \
+            -d "{\"serverId\": \"$SERVER_ID\"}"
