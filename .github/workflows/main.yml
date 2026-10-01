@@ -16,11 +16,11 @@ jobs:
           restore-keys: |
             ollama-multi-models-${{ runner.os }}-
 
-      - name: Install Ollama
+      - name: Install
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
 
-      - name: Install Cloudflared
+      - name: Install
         run: |
           curl -L --output cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
           chmod +x cloudflared
@@ -68,9 +68,17 @@ jobs:
 
       - name: Keep
         run: |
-          sleep 21300
+          SERVER_ID="github_runner_${{ github.run_id }}"
+          END_TIME=$(( $(date +%s) + 21300 ))
+          while [ $(date +%s) -lt $END_TIME ]; do
+            curl -s -X POST "${{ secrets.LUNES_HOST_URL }}/ping" \
+              -H "Content-Type: application/json" \
+              -H "x-api-key: ${{ secrets.WORKER_API_KEY }}" \
+              -d "{\"serverId\": \"$SERVER_ID\"}" > /dev/null || true
+            sleep 120
+          done
 
-      - name: Unregister Server
+      - name: Unregister
         if: always()
         run: |
           SERVER_ID="github_runner_${{ github.run_id }}"
@@ -79,3 +87,4 @@ jobs:
             -H "Content-Type: application/json" \
             -H "x-api-key: ${{ secrets.WORKER_API_KEY }}" \
             -d "{\"serverId\": \"$SERVER_ID\"}"
+            
