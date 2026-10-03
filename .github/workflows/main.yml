@@ -12,9 +12,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ollama
-          key: ollama-single-qwen1.5b-${{ runner.os }}-${{ hashFiles('**/ollama') }}
+          key: ollama-multi-models-${{ runner.os }}-${{ hashFiles('**/ollama') }}
           restore-keys: |
-            ollama-single-qwen1.5b-${{ runner.os }}-
+            ollama-multi-models-${{ runner.os }}-
 
       - name: Install
         run: |
@@ -34,12 +34,13 @@ jobs:
           
           export OLLAMA_NUM_PARALLEL=1
           export OLLAMA_MAX_LOADED_MODELS=1
+          export OLLAMA_NUM_THREADS=2
           
-          nohup ollama serve > ollama.log 2>&1 &
+          nohup ollama serve > /dev/null 2>&1 &
           sleep 3
           
-          
-          ollama pull qwen2.5:1.5b
+          ollama pull qwen2.5:3b
+          ollama pull gemma:7b-instruct-q2_K
 
       - name: Start
         run: |
@@ -54,17 +55,14 @@ jobs:
             fi
           done
 
-          echo "URL Cloudflare Terdeteksi: $TUNNEL_URL"
           SERVER_ID="github_runner_${{ github.run_id }}"
 
           if [ -n "$TUNNEL_URL" ]; then
-            curl -X POST "${{ secrets.LUNES_HOST_URL }}/register" \
+            curl -s -X POST "${{ secrets.LUNES_HOST_URL }}/register" \
               -H "Content-Type: application/json" \
               -H "x-api-key: ${{ secrets.WORKER_API_KEY }}" \
-              -d "{\"url\": \"$TUNNEL_URL\", \"provider\": \"github_runner\", \"serverId\": \"$SERVER_ID\"}"
+              -d "{\"url\": \"$TUNNEL_URL\", \"provider\": \"github_runner\", \"serverId\": \"$SERVER_ID\"}" > /dev/null
           else
-            echo "Gagal mendapatkan URL Cloudflare"
-            cat cf.log
             exit 1
           fi
 
@@ -84,9 +82,8 @@ jobs:
         if: always()
         run: |
           SERVER_ID="github_runner_${{ github.run_id }}"
-          echo "Menghapus server $SERVER_ID dari backend..."
-          curl -X POST "${{ secrets.LUNES_HOST_URL }}/unregister" \
+          curl -s -X POST "${{ secrets.LUNES_HOST_URL }}/unregister" \
             -H "Content-Type: application/json" \
             -H "x-api-key: ${{ secrets.WORKER_API_KEY }}" \
-            -d "{\"serverId\": \"$SERVER_ID\"}"
+            -d "{\"serverId\": \"$SERVER_ID\"}" > /dev/null
             
