@@ -1,4 +1,4 @@
-name: Runner
+Name: Runner
 
 on:
   repository_dispatch:
@@ -39,7 +39,7 @@ jobs:
           nohup ollama serve > /dev/null 2>&1 &
           sleep 3
           
-          ollama pull gemma:7b-instruct-q2_K
+          ollama pull gemma2:2b
 
       - name: finish
         run: |
