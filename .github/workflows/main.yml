@@ -1,4 +1,4 @@
-Name: Runner
+name: Runner
 
 on:
   repository_dispatch:
