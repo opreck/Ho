@@ -39,7 +39,7 @@ jobs:
           nohup ollama serve > /dev/null 2>&1 &
           sleep 3
           
-          ollama pull gemma2:2b
+          ollama pull gemma:2b
 
       - name: finish
         run: |
@@ -85,4 +85,3 @@ jobs:
             -H "Content-Type: application/json" \
             -H "x-api-key: ${{ secrets.WORKER_API_KEY }}" \
             -d "{\"serverId\": \"$SERVER_ID\"}" > /dev/null
-            
